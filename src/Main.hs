@@ -12,8 +12,8 @@ moveSnake :: Float -> GameState -> GameState
 moveSnake seconds game = game {snakeLoc = (x', y')}
   where
     (x, y) = snakeLoc game 
-    x' = x + fst (direction game) * seconds
-    y' = y + snd (direction game) * seconds
+    x' = x + fst (directionVector (direction game)) * seconds
+    y' = y + snd (directionVector (direction game)) * seconds
 
 render :: GameState -> Picture
 render game = pictures [apple, snake, drawGrid 20 20 600 600]
@@ -36,7 +36,5 @@ drawGrid rows cols width height =
     horizontalLines = [ line [(0, y), (fromIntegral width, y)] | y <- [0, cellHeight .. fromIntegral height] ]
     verticalLines = [ line [(x, 0), (x, fromIntegral height)] | x <- [0, cellWidth .. fromIntegral width] ]
 
-
 main :: IO ()
 main = play window background 2 initialState render handleKeys update
--- main = display window background (drawGrid 20 20 800 600)
