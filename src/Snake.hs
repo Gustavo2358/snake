@@ -6,10 +6,15 @@ module Snake
   , moveSnake
   ) where 
 
+import Graphics.Gloss (Color, green, red, dark)
+
 data Snake = Snake
   { snakeLoc :: (Float, Float)
   , appleLoc :: (Float, Float)
+  , snakeColor :: Color
+  , appleColor :: Color
   , snakeDirection :: Direction
+  , snakeTail :: [(Float, Float)]
   }
   deriving (Show)
 
@@ -26,16 +31,36 @@ initialState (x, y) =
   Snake
     { snakeLoc  =  (0.5, 0.5)
     , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
+    , snakeColor = green
+    , appleColor = dark red
     , snakeDirection = GoUp
+    , snakeTail = [(0.5, -0.5), (0.5, -1.5), (0.5, -2.5)]
     }
 
 moveSnake :: Float -> Snake -> Snake
-moveSnake _ snake = snake {snakeLoc = (x', y')}
-  where
-    (x, y) = snakeLoc snake
-    x' = if x > 9 && snakeDirection snake == GoRight || x < (-9) && snakeDirection snake == GoLeft 
+moveSnake _ snake = 
+  snake 
+  {snakeLoc = (x', y') 
+  ,snakeTail = calculateNewTailPosition (snakeLoc snake) (snakeTail snake)}
+    where
+      (x', y') = calculateSnakeMovement (snakeLoc snake) (snakeDirection snake)
+  -- where
+  --   (x, y) = snakeLoc snake
+  --   x' = if x > 9 && snakeDirection snake == GoRight || x < (-9) && snakeDirection snake == GoLeft 
+  --     then (-x) 
+  --     else x + fst (directionVector (snakeDirection snake))
+  --   y' = if y > 9 && snakeDirection snake == GoUp || y < (-9) && snakeDirection snake == GoDown 
+  --     then (-y)
+  --     else y + snd (directionVector (snakeDirection snake)) 
+
+calculateSnakeMovement :: (Float, Float) -> Direction -> (Float, Float)
+calculateSnakeMovement (x, y) dir = 
+  ( if x > 9 && dir == GoRight || x < (-9) && dir == GoLeft 
       then (-x) 
-      else x + fst (directionVector (snakeDirection snake))
-    y' = if y > 9 && snakeDirection snake == GoUp || y < (-9) && snakeDirection snake == GoDown 
+      else x + fst (directionVector dir)
+  ,if y > 9 && dir == GoUp || y < (-9) && dir == GoDown 
       then (-y)
-      else y + snd (directionVector (snakeDirection snake)) 
+      else y + snd (directionVector dir))
+    
+calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float)]
+calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
