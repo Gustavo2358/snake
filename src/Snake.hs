@@ -21,11 +21,11 @@ directionVector GoDown  = (0, -1)
 directionVector GoLeft  = (-1, 0)
 directionVector GoRight = (1, 0)
 
-initialState :: Snake
-initialState =
+initialState :: (Int, Int) -> Snake
+initialState (x, y) = 
   Snake
     { snakeLoc  =  (0.5, 0.5)
-    , appleLoc  = (-0.5, -0.5)
+    , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
     , snakeDirection = GoUp
     }
 

@@ -5,6 +5,7 @@ import Snake
 import KeyHandler
 import Window 
 import Grid
+import System.Random (randomRIO)
 
 render :: Snake -> Picture
 render game = pictures [apple, snake, drawGrid 20 20 600 600]
@@ -15,4 +16,8 @@ render game = pictures [apple, snake, drawGrid 20 20 600 600]
     snakeColor = green
 
 main :: IO ()
-main = play window background 3 initialState render handleKeys moveSnake
+main = do 
+  x <- randomRIO(-9,9)
+  y <- randomRIO(-9,9)
+  let appPos = (x,y)
+  play window background 3 (initialState appPos)  render handleKeys moveSnake
