@@ -16,6 +16,5 @@ drawGrid rows cols width height =
   where
     cellWidth = fromIntegral width / fromIntegral cols
     cellHeight = fromIntegral height / fromIntegral rows
-
     horizontalLines = [ line [(0, y), (fromIntegral width, y)] | y <- [0, cellHeight .. fromIntegral height] ]
     verticalLines = [ line [(x, 0), (x, fromIntegral height)] | x <- [0, cellWidth .. fromIntegral width] ]
