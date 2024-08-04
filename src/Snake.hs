@@ -11,7 +11,7 @@ import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
 
 data Game = Game
-  { snakeLoc :: (Float, Float)
+  { snakeHead :: (Float, Float)
   , appleLoc :: (Float, Float)
   , snakeColor :: Color
   , appleColor :: Color
@@ -34,7 +34,7 @@ directionVector Stop    = (0, 0)
 initialState :: (Int, Int) -> StdGen -> Game
 initialState (x, y) gen =
   Game
-    { snakeLoc  =  (0.5, 0.5)
+    { snakeHead  =  (0.5, 0.5)
     , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
     , snakeColor = green
     , appleColor = red
@@ -51,8 +51,8 @@ isCollision (x:xs) p
   | otherwise = isCollision xs p  
 
 moveSnake :: Float -> Game -> Game
-moveSnake _ snake@(Game {snakeLoc = sl, appleLoc = al, snakeDirection = sd, snakeTail = st}) 
-  | sl == al  = snake {snakeLoc  = newSnakeHead
+moveSnake _ snake@(Game {snakeHead = sl, appleLoc = al, snakeDirection = sd, snakeTail = st})
+  | sl == al  = snake {snakeHead  = newSnakeHead
                       ,snakeTail = if null st then sl : newSnakeTail else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc
                       ,randomGen = newRandomGen
@@ -63,7 +63,7 @@ moveSnake _ snake@(Game {snakeLoc = sl, appleLoc = al, snakeDirection = sd, snak
                         , gameOver       = True
                         }
                 else  
-                  snake {snakeLoc  = newSnakeHead
+                  snake {snakeHead  = newSnakeHead
                       ,snakeTail = newSnakeTail
                       }
   where

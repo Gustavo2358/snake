@@ -12,7 +12,7 @@ render :: Game -> Picture
 render game = pictures [apple, snake, snkTail, drawGrid 20 20 600 600, texto]
   where
     apple = uncurry gridTranslate (appleLoc game) $ color (appleColor game) $ circleSolid 15
-    snake = uncurry gridTranslate (snakeLoc game) $ color (snakeColor game) $ rectangleSolid 30 30
+    snake = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid 30 30
     snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid 30 30) (snakeTail game))
     texto = Translate (-295) 275 $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
 
