@@ -7,7 +7,7 @@ module Snake
   , isCollision
   ) where
 
-import Graphics.Gloss (Color, green, red, dark)
+import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
 
 data Game = Game
@@ -37,7 +37,7 @@ initialState (x, y) gen =
     { snakeLoc  =  (0.5, 0.5)
     , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
     , snakeColor = green
-    , appleColor = dark red
+    , appleColor = red
     , snakeDirection = GoUp
     , snakeTail = []
     , randomGen = gen
