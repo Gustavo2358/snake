@@ -51,9 +51,9 @@ isCollision (x:xs) p
   | otherwise = isCollision xs p  
 
 updateGame :: Float -> Game -> Game
-updateGame _ game@(Game {snakeHead = sl, appleLoc = al, snakeDirection = sd, snakeTail = st})
-  | sl == al  = game {snakeHead  = newSnakeHead
-                      ,snakeTail = if null st then sl : newSnakeTail else head st : newSnakeTail
+updateGame _ game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, snakeTail = st})
+  | sh == al  = game {snakeHead  = newSnakeHead
+                      ,snakeTail = if null st then [sh] else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc
                       ,randomGen = newRandomGen
                       }
@@ -67,8 +67,8 @@ updateGame _ game@(Game {snakeHead = sl, appleLoc = al, snakeDirection = sd, sna
                       ,snakeTail = newSnakeTail
                       }
   where
-    newSnakeHead              = calculateSnakeMovement sl sd
-    newSnakeTail              = calculateNewTailPosition sl st
+    newSnakeHead              = calculateSnakeMovement sh sd
+    newSnakeTail              = calculateNewTailPosition sh st
     (newAppleX, gen1)         = randomR (-9 :: Int, 9) (randomGen game)
     (newAppleY, newRandomGen) = randomR (-9 :: Int, 9) gen1
     newAppleLoc               = (fromIntegral newAppleX + 0.5, fromIntegral newAppleY + 0.5)

@@ -29,8 +29,8 @@ updateGameIO f game = do
   return newGame
 
 handleKeysIO :: Event -> Game -> IO Game
-handleKeysIO e w = do
-  return (handleKeys e w)
+handleKeysIO event game = do
+  return (handleKeys event game)
 
 renderIO :: Game -> IO Picture
 renderIO game@(Game {gameOver = gOver}) = do
