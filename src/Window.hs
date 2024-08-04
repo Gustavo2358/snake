@@ -12,6 +12,6 @@ window :: Display
 window = InWindow "Snake" (width, height) (xOffset, yOffset)
 
 background :: Color
-background = white
+background = greyN 0.2
 
 

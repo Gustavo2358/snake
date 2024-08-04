@@ -1,15 +1,16 @@
 module Snake
   ( initialState
-  , Snake(..)
+  , Game(..)
   , Direction(..)
   , directionVector
   , moveSnake
+  , isCollision
   ) where
 
 import Graphics.Gloss (Color, green, red, dark)
 import System.Random (StdGen, Random (randomR))
 
-data Snake = Snake
+data Game = Game
   { snakeLoc :: (Float, Float)
   , appleLoc :: (Float, Float)
   , snakeColor :: Color
@@ -17,20 +18,22 @@ data Snake = Snake
   , snakeDirection :: Direction
   , snakeTail :: [(Float, Float)]
   , randomGen :: StdGen
+  , gameOver :: Bool
   }
   deriving (Show)
 
-data Direction = GoUp | GoDown | GoLeft | GoRight deriving (Eq, Show)
+data Direction = GoUp | GoDown | GoLeft | GoRight | Stop deriving (Eq, Show)
 
 directionVector :: Direction -> (Float, Float)
 directionVector GoUp    = (0, 1)
 directionVector GoDown  = (0, -1)
 directionVector GoLeft  = (-1, 0)
 directionVector GoRight = (1, 0)
+directionVector Stop    = (0, 0)
 
-initialState :: (Int, Int) -> StdGen -> Snake
+initialState :: (Int, Int) -> StdGen -> Game
 initialState (x, y) gen =
-  Snake
+  Game
     { snakeLoc  =  (0.5, 0.5)
     , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
     , snakeColor = green
@@ -38,19 +41,34 @@ initialState (x, y) gen =
     , snakeDirection = GoUp
     , snakeTail = []
     , randomGen = gen
+    , gameOver  = False
     }
 
-moveSnake :: Float -> Snake -> Snake
-moveSnake _ snake@(Snake {snakeLoc = sl, appleLoc = al, snakeDirection = sd, snakeTail = st}) 
-  | sl == al  = snake {snakeLoc  = calculateSnakeMovement sl sd
-                      ,snakeTail = if null st then sl : calculateNewTailPosition sl st else head st : calculateNewTailPosition sl st
+isCollision :: [(Float, Float)] -> (Float, Float) -> Bool
+isCollision [] _ = False
+isCollision (x:xs) p  
+  | x == p    = True
+  | otherwise = isCollision xs p  
+
+moveSnake :: Float -> Game -> Game
+moveSnake _ snake@(Game {snakeLoc = sl, appleLoc = al, snakeDirection = sd, snakeTail = st}) 
+  | sl == al  = snake {snakeLoc  = newSnakeHead
+                      ,snakeTail = if null st then sl : newSnakeTail else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc
                       ,randomGen = newRandomGen
                       }
-  | otherwise = snake {snakeLoc  = calculateSnakeMovement sl sd
-                      ,snakeTail = calculateNewTailPosition sl st
+  | otherwise = if isCollision  newSnakeTail newSnakeHead 
+                then
+                  snake { snakeDirection = Stop
+                        , gameOver       = True
+                        }
+                else  
+                  snake {snakeLoc  = newSnakeHead
+                      ,snakeTail = newSnakeTail
                       }
   where
+    newSnakeHead              = calculateSnakeMovement sl sd
+    newSnakeTail              = calculateNewTailPosition sl st
     (newAppleX, gen1)         = randomR (-9 :: Int, 9) (randomGen snake)
     (newAppleY, newRandomGen) = randomR (-9 :: Int, 9) gen1
     newAppleLoc               = (fromIntegral newAppleX + 0.5, fromIntegral newAppleY + 0.5)
