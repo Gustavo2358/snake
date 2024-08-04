@@ -23,9 +23,9 @@ renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverTex
     gameOverText   = Translate (-165) 20 $ Scale 0.4 0.4 $ color white $ Text "Game Over!"
     score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length st))
 
-updateGame :: Float -> Game -> IO Game
-updateGame f game = do
-  let newGame = moveSnake f game
+updateGameIO :: Float -> Game -> IO Game
+updateGameIO f game = do
+  let newGame = updateGame f game
   return newGame
 
 handleKeysIO :: Event -> Game -> IO Game
@@ -42,4 +42,4 @@ main = do
   let (x, gen') = randomR (-9,9) gen
   let (y, gen'') = randomR (-9,9) gen'
   let applePos = (x,y)
-  playIO window background 12 (initialState applePos gen'') renderIO handleKeysIO updateGame
+  playIO window background 12 (initialState applePos gen'') renderIO handleKeysIO updateGameIO

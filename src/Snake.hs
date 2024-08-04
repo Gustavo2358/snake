@@ -3,8 +3,8 @@ module Snake
   , Game(..)
   , Direction(..)
   , directionVector
-  , moveSnake
   , isCollision
+  , updateGame
   ) where
 
 import Graphics.Gloss (Color, green, red)
@@ -38,7 +38,7 @@ initialState (x, y) gen =
     , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
     , snakeColor = green
     , appleColor = red
-    , snakeDirection = GoUp
+    , snakeDirection = Stop
     , snakeTail = []
     , randomGen = gen
     , gameOver  = False
@@ -50,26 +50,26 @@ isCollision (x:xs) p
   | x == p    = True
   | otherwise = isCollision xs p  
 
-moveSnake :: Float -> Game -> Game
-moveSnake _ snake@(Game {snakeHead = sl, appleLoc = al, snakeDirection = sd, snakeTail = st})
-  | sl == al  = snake {snakeHead  = newSnakeHead
+updateGame :: Float -> Game -> Game
+updateGame _ game@(Game {snakeHead = sl, appleLoc = al, snakeDirection = sd, snakeTail = st})
+  | sl == al  = game {snakeHead  = newSnakeHead
                       ,snakeTail = if null st then sl : newSnakeTail else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc
                       ,randomGen = newRandomGen
                       }
   | otherwise = if isCollision  newSnakeTail newSnakeHead 
                 then
-                  snake { snakeDirection = Stop
+                  game { snakeDirection = Stop
                         , gameOver       = True
                         }
                 else  
-                  snake {snakeHead  = newSnakeHead
+                  game {snakeHead  = newSnakeHead
                       ,snakeTail = newSnakeTail
                       }
   where
     newSnakeHead              = calculateSnakeMovement sl sd
     newSnakeTail              = calculateNewTailPosition sl st
-    (newAppleX, gen1)         = randomR (-9 :: Int, 9) (randomGen snake)
+    (newAppleX, gen1)         = randomR (-9 :: Int, 9) (randomGen game)
     (newAppleY, newRandomGen) = randomR (-9 :: Int, 9) gen1
     newAppleLoc               = (fromIntegral newAppleX + 0.5, fromIntegral newAppleY + 0.5)
 
