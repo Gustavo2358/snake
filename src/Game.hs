@@ -1,10 +1,11 @@
-module Snake
+module Game
   ( initialState
   , Game(..)
   , Direction(..)
   , directionVector
   , isCollision
   , updateGame
+  , createAppleRandomPosition
   ) where
 
 import Graphics.Gloss (Color, green, red)
@@ -103,3 +104,9 @@ calculateSnakeMovement (x, y) dir =
 calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float)]
 calculateNewTailPosition _ [] = []
 calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
+
+createAppleRandomPosition :: StdGen -> ((Int, Int), StdGen)
+createAppleRandomPosition gen = ((x, y), gen'')
+  where 
+    (x, gen') = randomR (xAppleMinLimit,xAppleMaxLimit) gen
+    (y, gen'') = randomR (yAppleMaxLimit,yAppleMaxLimit) gen'

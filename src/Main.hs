@@ -2,12 +2,12 @@ module Main (main) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-import Snake
+import Game
 import KeyHandler
 import Window 
 import Grid
 import Positions
-import System.Random (Random (randomR), newStdGen)
+import System.Random (newStdGen)
 
 render :: Game -> Picture
 render game = pictures [apple, snake, snkTail, drawGrid, texto]
@@ -18,11 +18,12 @@ render game = pictures [apple, snake, snkTail, drawGrid, texto]
     texto = Translate pointsX pointsY $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
 
 renderGameOver :: Game -> Picture
-renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverText, score]
+renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverText, score, playAgainText]
   where
     gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral windowWidth) (fromIntegral windowHeight)
     gameOverText   = Translate (-165) 20 $ Scale 0.4 0.4 $ color white $ Text "Game Over!"
     score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length st))
+    playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
 
 updateGameIO :: Float -> Game -> IO Game
 updateGameIO f game = do
@@ -40,7 +41,5 @@ renderIO game@(Game {gameOver = gOver}) = do
 main :: IO ()
 main = do 
   gen <- newStdGen
-  let (x, gen') = randomR (xAppleMinLimit,xAppleMaxLimit) gen
-  let (y, gen'') = randomR (yAppleMaxLimit,yAppleMaxLimit) gen'
-  let applePos = (x,y)
-  playIO window background 12 (initialState applePos gen'') renderIO handleKeysIO updateGameIO
+  let (applePos, gen') = createAppleRandomPosition gen
+  playIO window background 12 (initialState applePos gen') renderIO handleKeysIO updateGameIO
