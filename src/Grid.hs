@@ -1,28 +1,27 @@
-module Grid(drawGrid, gridTranslate) where
+module Grid(drawGrid) where
 
 import Graphics.Gloss 
   (Picture
   ,line
   ,pictures
-  ,translate
   ,color
   ,greyN
   )
 
--- tela 600 x 600, cellSize 30 => 20 x 20 celulas
-cellSize :: Float
-cellSize = 30
-
--- Faz o snake andar no grid
-gridTranslate :: Float -> Float -> Picture -> Picture
-gridTranslate x y = translate (x * cellSize) (y * cellSize)
+import Positions
 
 gridColor :: Picture -> Picture
 gridColor = color (greyN 0.40)
 
-drawGrid :: Int -> Int -> Int -> Int -> Picture
-drawGrid rows cols width height =
-  pictures $ map (gridTranslate (-10) (-10)) (horizontalLines ++ verticalLines)
+rows, cols, width, height :: Int
+rows = 20
+cols = 20
+width = 600
+height = 600
+
+drawGrid :: Picture
+drawGrid =
+  pictures $ map gridPosition (horizontalLines ++ verticalLines)
   where
     cellWidth = fromIntegral width / fromIntegral cols
     cellHeight = fromIntegral height / fromIntegral rows

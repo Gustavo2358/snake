@@ -19,7 +19,7 @@ executable snake
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
-  other-modules:       Window, KeyHandler, Snake, Grid
+  other-modules:       Window, KeyHandler, Snake, Grid, Positions
   build-depends:       base >= 4.7 && < 5,
                        gloss (==1.13.*),
                        random

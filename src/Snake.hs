@@ -9,6 +9,20 @@ module Snake
 
 import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
+import Positions 
+  ( xMaxLimit
+  , xMinLimit
+  , yMaxLimit
+  , yMinLimit
+  , xAppleMinLimit
+  , xAppleMaxLimit
+  , yAppleMaxLimit
+  , yAppleMinLimit
+  , snakeHeadInitialX
+  , snakeHeadInitialY
+  , appleInitialX
+  , appleInitialY
+  )
 
 data Game = Game
   { snakeHead :: (Float, Float)
@@ -32,10 +46,10 @@ directionVector GoRight = (1, 0)
 directionVector Stop    = (0, 0)
 
 initialState :: (Int, Int) -> StdGen -> Game
-initialState (x, y) gen =
+initialState (randX, randY) gen =
   Game
-    { snakeHead  =  (0.5, 0.5)
-    , appleLoc  = (-0.5 + fromIntegral x, -0.5 + fromIntegral y)
+    { snakeHead  =  (snakeHeadInitialX, snakeHeadInitialY)
+    , appleLoc  = (appleInitialX + fromIntegral randX, appleInitialY + fromIntegral randY)
     , snakeColor = green
     , appleColor = red
     , snakeDirection = Stop
@@ -55,7 +69,7 @@ updateGame _ game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, sna
   | sh == al  = game {snakeHead  = newSnakeHead
                       ,snakeTail = if null st then [sh] else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc
-                      ,randomGen = newRandomGen
+                      ,randomGen = gen''
                       }
   | otherwise = if isCollision  newSnakeTail newSnakeHead 
                 then
@@ -69,18 +83,22 @@ updateGame _ game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, sna
   where
     newSnakeHead              = calculateSnakeMovement sh sd
     newSnakeTail              = calculateNewTailPosition sh st
-    (newAppleX, gen1)         = randomR (-9 :: Int, 9) (randomGen game)
-    (newAppleY, newRandomGen) = randomR (-9 :: Int, 9) gen1
-    newAppleLoc               = (fromIntegral newAppleX + 0.5, fromIntegral newAppleY + 0.5)
+    (newAppleX, gen')         = randomR (xAppleMinLimit, xAppleMaxLimit) (randomGen game)
+    (newAppleY, gen'') = randomR (yAppleMinLimit, yAppleMaxLimit) gen'
+    newAppleLoc               = (fromIntegral newAppleX + appleInitialX, fromIntegral newAppleY + appleInitialY)
 
 calculateSnakeMovement :: (Float, Float) -> Direction -> (Float, Float)
 calculateSnakeMovement (x, y) dir =
-  ( if x > 9 && dir == GoRight || x < (-9) && dir == GoLeft
-      then (-x)
-      else x + fst (directionVector dir)
-  ,if y > 9 && dir == GoUp || y < (-9) && dir == GoDown
-      then (-y)
-      else y + snd (directionVector dir))
+  (calcSnakeXPosition, calcSnakeYPosition)
+  where
+    calcSnakeXPosition 
+      | x >= xMaxLimit && dir == GoRight = xMinLimit
+      | x <= xMinLimit && dir == GoLeft = xMaxLimit
+      | otherwise = x + fst (directionVector dir)
+    calcSnakeYPosition
+      | y >= yMaxLimit && dir == GoUp = yMinLimit
+      | y <= yMinLimit && dir == GoDown = yMaxLimit
+      | otherwise = y + snd (directionVector dir)
 
 calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float)]
 calculateNewTailPosition _ [] = []
