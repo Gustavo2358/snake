@@ -6,6 +6,8 @@ module Game
   , isCollision
   , updateGame
   , createAppleRandomPosition
+  , calculateSnakeMovement
+  , calculateNewTailPosition
   ) where
 
 import Graphics.Gloss (Color, green, red)

@@ -59,10 +59,10 @@ yMaxLimit = 9.5 + yOffset
 yMinLimit = -9.5 + yOffset
 
 xAppleMaxLimit, xAppleMinLimit, yAppleMaxLimit, yAppleMinLimit :: Int
-xAppleMaxLimit = 9 -- + round xOffset
-xAppleMinLimit = -9 -- + round xOffset
-yAppleMaxLimit = 9 -- + round yOffset
-yAppleMinLimit = -9 -- + round yOffset
+xAppleMaxLimit = 9 
+xAppleMinLimit = -9 
+yAppleMaxLimit = 9 
+yAppleMinLimit = -9 
 
 snakeHeadInitialX, snakeHeadInitialY :: Float
 snakeHeadInitialX = 0.5 + xOffset
