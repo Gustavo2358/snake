@@ -65,4 +65,5 @@ test-suite test
                        QuickCheck,
                        snake,
                        random,
-                       gloss
+                       gloss,
+                       mtl

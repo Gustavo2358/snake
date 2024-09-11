@@ -3,6 +3,7 @@ import Test.Tasty.HUnit (assertEqual, testCase)
 import Test.Tasty.QuickCheck as QC
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
+import Control.Monad.State
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Game
@@ -79,7 +80,7 @@ prop_isCollision positions pos =
 
 prop_updateGame :: Game -> Bool
 prop_updateGame game =
-  let updatedGame = updateGame game
+  let updatedGame = execState updateGame game
       newHead = calculateSnakeMovement (snakeHead game) (snakeDirection game)
       newTail = calculateNewTailPosition (snakeHead game) (snakeTail game)
   in if snakeHead game == appleLoc game

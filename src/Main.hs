@@ -28,8 +28,7 @@ renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverTex
 
 updateGameIO :: Float -> Game -> IO Game
 updateGameIO _ game = do
-  let newGame = runState updateGame game
-  return $ snd newGame
+  return $ execState updateGame game
 
 handleKeysIO :: Event -> Game -> IO Game
 handleKeysIO event game = do
