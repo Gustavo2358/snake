@@ -32,7 +32,7 @@ updateGameIO _ game = do
 
 handleKeysIO :: Event -> Game -> IO Game
 handleKeysIO event game = do
-  return (handleKeys event game)
+  return ( execState (handleKeys event) game)
 
 renderIO :: Game -> IO Picture
 renderIO game@(Game {gameOver = gOver}) = do
