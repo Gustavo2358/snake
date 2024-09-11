@@ -10,6 +10,7 @@ module Game
   , calculateNewTailPosition
   ) where
 
+import Control.Monad.State
 import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
 import Positions 
@@ -67,28 +68,28 @@ isCollision (x:xs) p
   | x == p    = True
   | otherwise = isCollision xs p  
 
-updateGame :: Game -> Game
-updateGame game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, snakeTail = st})
-  | sh == al  = game {snakeHead  = newSnakeHead
-                      ,snakeTail = if null st then [sh] else head st : newSnakeTail
-                      ,appleLoc  = newAppleLoc
-                      ,randomGen = gen''
-                      }
-  | otherwise = if isCollision  newSnakeTail newSnakeHead 
-                then
-                  game { snakeDirection = Stop
-                        , gameOver       = True
-                        }
-                else  
-                  game {snakeHead  = newSnakeHead
-                      ,snakeTail = newSnakeTail
-                      }
-  where
-    newSnakeHead              = calculateSnakeMovement sh sd
-    newSnakeTail              = calculateNewTailPosition sh st
-    (newAppleX, gen')         = randomR (xAppleMinLimit, xAppleMaxLimit) (randomGen game)
-    (newAppleY, gen'') = randomR (yAppleMinLimit, yAppleMaxLimit) gen'
-    newAppleLoc               = (fromIntegral newAppleX + appleInitialX, fromIntegral newAppleY + appleInitialY)
+updateGame :: State Game ()
+updateGame = do
+  game <- get
+  let sh = snakeHead game
+      al = appleLoc game
+      sd = snakeDirection game
+      st = snakeTail game
+      newSnakeHead = calculateSnakeMovement sh sd
+      newSnakeTail = calculateNewTailPosition sh st
+      (newAppleX, gen') = randomR (xAppleMinLimit, xAppleMaxLimit) (randomGen game)
+      (newAppleY, gen'') = randomR (yAppleMinLimit, yAppleMaxLimit) gen'
+      newAppleLoc = (fromIntegral newAppleX + appleInitialX, fromIntegral newAppleY + appleInitialY)
+  if sh == al
+    then do
+      put game { snakeHead = newSnakeHead
+               , snakeTail = if null st then [sh] else head st : newSnakeTail
+               , appleLoc = newAppleLoc
+               , randomGen = gen''
+               }
+    else if isCollision newSnakeTail newSnakeHead
+      then put game { snakeDirection = Stop, gameOver = True }
+      else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail }
 
 calculateSnakeMovement :: (Float, Float) -> Direction -> (Float, Float)
 calculateSnakeMovement (x, y) dir =

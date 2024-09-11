@@ -1,5 +1,6 @@
 module Main (main) where
 
+import Control.Monad.State
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Game
@@ -27,8 +28,8 @@ renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverTex
 
 updateGameIO :: Float -> Game -> IO Game
 updateGameIO _ game = do
-  let newGame = updateGame game
-  return newGame
+  let newGame = runState updateGame game
+  return $ snd newGame
 
 handleKeysIO :: Event -> Game -> IO Game
 handleKeysIO event game = do
