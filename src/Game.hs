@@ -67,8 +67,8 @@ isCollision (x:xs) p
   | x == p    = True
   | otherwise = isCollision xs p  
 
-updateGame :: Float -> Game -> Game
-updateGame _ game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, snakeTail = st})
+updateGame :: Game -> Game
+updateGame game@(Game {snakeHead = sh, appleLoc = al, snakeDirection = sd, snakeTail = st})
   | sh == al  = game {snakeHead  = newSnakeHead
                       ,snakeTail = if null st then [sh] else head st : newSnakeTail
                       ,appleLoc  = newAppleLoc

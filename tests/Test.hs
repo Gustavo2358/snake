@@ -77,9 +77,9 @@ prop_isCollision :: [(Float, Float)] -> (Float, Float) -> Bool
 prop_isCollision positions pos =
   isCollision positions pos == (pos `elem` positions)
 
-prop_updateGame :: Float -> Game -> Bool
-prop_updateGame delta game =
-  let updatedGame = updateGame delta game
+prop_updateGame :: Game -> Bool
+prop_updateGame game =
+  let updatedGame = updateGame game
       newHead = calculateSnakeMovement (snakeHead game) (snakeDirection game)
       newTail = calculateNewTailPosition (snakeHead game) (snakeTail game)
   in if snakeHead game == appleLoc game

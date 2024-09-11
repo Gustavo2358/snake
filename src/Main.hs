@@ -26,8 +26,8 @@ renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverTex
     playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
 
 updateGameIO :: Float -> Game -> IO Game
-updateGameIO f game = do
-  let newGame = updateGame f game
+updateGameIO _ game = do
+  let newGame = updateGame game
   return newGame
 
 handleKeysIO :: Event -> Game -> IO Game
