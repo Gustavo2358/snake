@@ -57,8 +57,8 @@ instance Arbitrary Color where
 prop_initialState :: (Int, Int) -> StdGen -> Bool
 prop_initialState randCoords gen =
   let game = initialState randCoords gen
-  in snakeHead game == (snakeHeadInitialX, snakeHeadInitialY) &&
-     appleLoc game == (appleInitialX + fromIntegral (fst randCoords), appleInitialY + fromIntegral (snd randCoords)) &&
+  in snakeHead game == (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig) &&
+     appleLoc game == (appleInitialX positionsConfig + fromIntegral (fst randCoords), appleInitialY positionsConfig + fromIntegral (snd randCoords)) &&
      snakeColor game == green &&
      appleColor game == red &&
      snakeDirection game == Stop &&
@@ -94,5 +94,5 @@ prop_updateGame game =
 prop_createAppleRandomPosition :: StdGen -> Bool
 prop_createAppleRandomPosition gen =
   let ((x, y), _) = createAppleRandomPosition gen
-  in x >= xAppleMinLimit && x <= xAppleMaxLimit &&
-     y >= yAppleMinLimit && y <= yAppleMaxLimit
+  in x >= xAppleMinLimit positionsConfig && x <= xAppleMaxLimit positionsConfig &&
+     y >= yAppleMinLimit positionsConfig && y <= yAppleMaxLimit positionsConfig

@@ -1,5 +1,6 @@
 module Main (main) where
 
+import Control.Monad.Reader
 import Control.Monad.State
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
@@ -10,20 +11,21 @@ import Grid
 import Positions
 import System.Random (newStdGen)
 
-render :: State Game Picture
+render :: StateT Game (Reader Config) Picture
 render = do 
   game <- get
-  let apple   = uncurry gridTranslate (appleLoc game) $ color (appleColor game) $ circleSolid (cellSize / 2)
-      snake   = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid cellSize cellSize
-      snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid cellSize cellSize) (snakeTail game))
-      texto   = Translate pointsX pointsY $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
+  config <- lift ask 
+  let apple   = uncurry gridTranslate (appleLoc game) $ color (appleColor game) $ circleSolid (cellSize config / 2)
+      snake   = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid (cellSize config) (cellSize config)
+      snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid (cellSize config) (cellSize config)) (snakeTail game))
+      texto   = Translate (pointsX config) (pointsY config) $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
   return $ pictures [apple, snake, snkTail, drawGrid, texto]
 
 renderGameOver :: State Game Picture
 renderGameOver = do 
   game <- get
   let
-    gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral windowWidth) (fromIntegral windowHeight)
+    gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral (windowWidth positionsConfig)) (fromIntegral (windowHeight positionsConfig))
     gameOverText   = Translate (-165) 20 $ Scale 0.4 0.4 $ color white $ Text "Game Over!"
     score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length $ snakeTail game))
     playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
@@ -38,8 +40,10 @@ handleKeysIO event game = do
   return ( execState (handleKeys event) game)
 
 renderIO :: Game -> IO Picture
-renderIO game@(Game {gameOver = gOver}) = do
-  return $ if gOver then evalState renderGameOver game else evalState render game
+renderIO game = do
+  return $ if gameOver game 
+             then evalState renderGameOver game 
+             else runReader (evalStateT render game) positionsConfig
 
 main :: IO ()
 main = do 

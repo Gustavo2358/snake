@@ -14,19 +14,6 @@ import Control.Monad.State
 import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
 import Positions 
-  ( xMaxLimit
-  , xMinLimit
-  , yMaxLimit
-  , yMinLimit
-  , xAppleMinLimit
-  , xAppleMaxLimit
-  , yAppleMaxLimit
-  , yAppleMinLimit
-  , snakeHeadInitialX
-  , snakeHeadInitialY
-  , appleInitialX
-  , appleInitialY
-  )
 
 data Game = Game
   { snakeHead :: (Float, Float)
@@ -52,8 +39,8 @@ directionVector Stop    = (0, 0)
 initialState :: (Int, Int) -> StdGen -> Game
 initialState (randX, randY) gen =
   Game
-    { snakeHead  =  (snakeHeadInitialX, snakeHeadInitialY)
-    , appleLoc  = (appleInitialX + fromIntegral randX, appleInitialY + fromIntegral randY)
+    { snakeHead  =  (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig)
+    , appleLoc  = (appleInitialX positionsConfig + fromIntegral randX, appleInitialY positionsConfig + fromIntegral randY)
     , snakeColor = green
     , appleColor = red
     , snakeDirection = Stop
@@ -77,9 +64,9 @@ updateGame = do
       st = snakeTail game
       newSnakeHead = calculateSnakeMovement sh sd
       newSnakeTail = calculateNewTailPosition sh st
-      (newAppleX, gen') = randomR (xAppleMinLimit, xAppleMaxLimit) (randomGen game)
-      (newAppleY, gen'') = randomR (yAppleMinLimit, yAppleMaxLimit) gen'
-      newAppleLoc = (fromIntegral newAppleX + appleInitialX, fromIntegral newAppleY + appleInitialY)
+      (newAppleX, gen') = randomR (xAppleMinLimit positionsConfig, xAppleMaxLimit positionsConfig) (randomGen game)
+      (newAppleY, gen'') = randomR (yAppleMinLimit positionsConfig, yAppleMaxLimit positionsConfig) gen'
+      newAppleLoc = (fromIntegral newAppleX + appleInitialX positionsConfig, fromIntegral newAppleY  + appleInitialY positionsConfig)
   if sh == al
     then do
       put game { snakeHead = newSnakeHead
@@ -96,12 +83,12 @@ calculateSnakeMovement (x, y) dir =
   (calcSnakeXPosition, calcSnakeYPosition)
   where
     calcSnakeXPosition 
-      | x >= xMaxLimit && dir == GoRight = xMinLimit
-      | x <= xMinLimit && dir == GoLeft = xMaxLimit
+      | x >= xMaxLimit positionsConfig && dir == GoRight = xMinLimit positionsConfig
+      | x <= xMinLimit positionsConfig && dir == GoLeft = xMaxLimit positionsConfig
       | otherwise = x + fst (directionVector dir)
     calcSnakeYPosition
-      | y >= yMaxLimit && dir == GoUp = yMinLimit
-      | y <= yMinLimit && dir == GoDown = yMaxLimit
+      | y >= yMaxLimit positionsConfig && dir == GoUp = yMinLimit positionsConfig
+      | y <= yMinLimit positionsConfig && dir == GoDown = yMaxLimit positionsConfig
       | otherwise = y + snd (directionVector dir)
 
 calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float)]
@@ -111,5 +98,5 @@ calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
 createAppleRandomPosition :: StdGen -> ((Int, Int), StdGen)
 createAppleRandomPosition gen = ((x, y), gen'')
   where 
-    (x, gen') = randomR (xAppleMinLimit,xAppleMaxLimit) gen
-    (y, gen'') = randomR (yAppleMaxLimit,yAppleMaxLimit) gen'
+    (x, gen') = randomR (xAppleMinLimit positionsConfig,xAppleMaxLimit positionsConfig) gen
+    (y, gen'') = randomR (yAppleMaxLimit positionsConfig,yAppleMaxLimit positionsConfig) gen'
