@@ -39,11 +39,12 @@ directionVector GoLeft  = (-1, 0)
 directionVector GoRight = (1, 0)
 directionVector Stop    = (0, 0)
 
-initialState :: (Int, Int) -> StdGen -> Game
-initialState (randX, randY) gen =
-  Game
-    { snakeHead  =  (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig)
-    , appleLoc  = (appleInitialX positionsConfig + fromIntegral randX, appleInitialY positionsConfig + fromIntegral randY)
+initialState :: (Int, Int) -> StdGen -> Reader Config Game
+initialState (randX, randY) gen = do 
+  config <- ask
+  return Game
+    { snakeHead  =  (snakeHeadInitialX config, snakeHeadInitialY config)
+    , appleLoc  = (appleInitialX config + fromIntegral randX, appleInitialY config + fromIntegral randY)
     , snakeColor = green
     , appleColor = red
     , snakeDirection = Stop

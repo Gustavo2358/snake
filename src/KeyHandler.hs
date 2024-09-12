@@ -4,6 +4,8 @@ import Control.Monad
 import Control.Monad.State
 import Graphics.Gloss.Interface.Pure.Game (Event(EventKey), SpecialKey (KeyUp, KeyRight, KeyDown, KeyLeft, KeyEnter), Key (SpecialKey), KeyState (Down))
 import Game
+import Positions (positionsConfig)
+import Control.Monad.Reader (runReader)
 
 handleKeys :: Event -> State Game ()
 handleKeys (EventKey (SpecialKey KeyUp) Down _ _)    = do modify $ \game -> game {snakeDirection = GoUp}
@@ -14,5 +16,5 @@ handleKeys (EventKey (SpecialKey KeyEnter) Down _ _) = do
   game <- get
   when (gameOver game) $ do
     let (pos, gen) = createAppleRandomPosition $ randomGen game
-    put $ initialState pos gen
+    put $ runReader (initialState pos gen) positionsConfig
 handleKeys _ = return ()

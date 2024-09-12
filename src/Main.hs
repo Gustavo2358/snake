@@ -50,4 +50,11 @@ main :: IO ()
 main = do 
   gen <- newStdGen
   let (applePos, gen') = createAppleRandomPosition gen
-  playIO window background 120 (initialState applePos gen') renderIO handleKeysIO updateGameIO
+  playIO 
+    window 
+    background 
+    120 
+    (runReader (initialState applePos gen') positionsConfig) 
+    renderIO 
+    handleKeysIO 
+    updateGameIO
