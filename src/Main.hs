@@ -49,7 +49,7 @@ renderIO game = do
 main :: IO ()
 main = do 
   gen <- newStdGen
-  let (applePos, gen') = createAppleRandomPosition gen
+  let (applePos, gen') = runReader (createAppleRandomPosition gen) positionsConfig
   playIO 
     window 
     background 

@@ -107,8 +107,9 @@ calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float
 calculateNewTailPosition _ [] = []
 calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
 
-createAppleRandomPosition :: StdGen -> ((Int, Int), StdGen)
-createAppleRandomPosition gen = ((x, y), gen'')
-  where 
-    (x, gen') = randomR (xAppleMinLimit positionsConfig,xAppleMaxLimit positionsConfig) gen
-    (y, gen'') = randomR (yAppleMaxLimit positionsConfig,yAppleMaxLimit positionsConfig) gen'
+createAppleRandomPosition :: StdGen -> Reader Config ((Int, Int), StdGen)
+createAppleRandomPosition gen = do 
+  config <- ask
+  let (x, gen') = randomR (xAppleMinLimit config,xAppleMaxLimit config) gen
+      (y, gen'') = randomR (yAppleMaxLimit config,yAppleMaxLimit config) gen'
+  return ((x, y), gen'')

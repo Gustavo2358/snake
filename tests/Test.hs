@@ -100,6 +100,6 @@ prop_updateGame game =
 
 prop_createAppleRandomPosition :: StdGen -> Bool
 prop_createAppleRandomPosition gen =
-  let ((x, y), _) = createAppleRandomPosition gen
+  let ((x, y), _) = runReader (createAppleRandomPosition gen) positionsConfig
   in x >= xAppleMinLimit positionsConfig && x <= xAppleMaxLimit positionsConfig &&
      y >= yAppleMinLimit positionsConfig && y <= yAppleMaxLimit positionsConfig
