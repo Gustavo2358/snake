@@ -67,12 +67,11 @@ updateGame delta = do
   if elapsedTime game < idleTime game
     then do
       put game {elapsedTime = elapsedTime game + delta}
-    else do 
+    else do
+      newSnakeHead <- lift $ calculateSnakeMovement (snakeHead game) (snakeDirection game)
       let sh = snakeHead game
           al = appleLoc game
-          sd = snakeDirection game
           st = snakeTail game
-          newSnakeHead = calculateSnakeMovement sh sd
           newSnakeTail = calculateNewTailPosition sh st
           (newAppleX, gen') = randomR (xAppleMinLimit config, xAppleMaxLimit config) (randomGen game)
           (newAppleY, gen'') = randomR (yAppleMinLimit config, yAppleMaxLimit config) gen'
@@ -90,18 +89,18 @@ updateGame delta = do
           then put game { snakeDirection = Stop, gameOver = True, elapsedTime = 0 }
           else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail, elapsedTime = 0 }
 
-calculateSnakeMovement :: (Float, Float) -> Direction -> (Float, Float)
-calculateSnakeMovement (x, y) dir =
-  (calcSnakeXPosition, calcSnakeYPosition)
-  where
-    calcSnakeXPosition 
-      | x >= xMaxLimit positionsConfig && dir == GoRight = xMinLimit positionsConfig
-      | x <= xMinLimit positionsConfig && dir == GoLeft = xMaxLimit positionsConfig
-      | otherwise = x + fst (directionVector dir)
-    calcSnakeYPosition
-      | y >= yMaxLimit positionsConfig && dir == GoUp = yMinLimit positionsConfig
-      | y <= yMinLimit positionsConfig && dir == GoDown = yMaxLimit positionsConfig
-      | otherwise = y + snd (directionVector dir)
+calculateSnakeMovement :: (Float, Float) -> Direction -> Reader Config (Float, Float)
+calculateSnakeMovement (x, y) dir = do
+  config <- ask
+  let calcSnakeXPosition
+        | x >= xMaxLimit config && dir == GoRight = xMinLimit config
+        | x <= xMinLimit config && dir == GoLeft  = xMaxLimit config
+        | otherwise = x + fst (directionVector dir)
+      calcSnakeYPosition
+        | y >= yMaxLimit config && dir == GoUp    = yMinLimit config
+        | y <= yMinLimit config && dir == GoDown  = yMaxLimit config
+        | otherwise = y + snd (directionVector dir)
+  return (calcSnakeXPosition, calcSnakeYPosition)
 
 calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float)]
 calculateNewTailPosition _ [] = []
