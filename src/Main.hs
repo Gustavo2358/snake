@@ -10,21 +10,24 @@ import Grid
 import Positions
 import System.Random (newStdGen)
 
-render :: Game -> Picture
-render game = pictures [apple, snake, snkTail, drawGrid, texto]
-  where
-    apple = uncurry gridTranslate (appleLoc game) $ color (appleColor game) $ circleSolid (cellSize / 2)
-    snake = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid cellSize cellSize
-    snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid cellSize cellSize) (snakeTail game))
-    texto = Translate pointsX pointsY $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
+render :: State Game Picture
+render = do 
+  game <- get
+  let apple   = uncurry gridTranslate (appleLoc game) $ color (appleColor game) $ circleSolid (cellSize / 2)
+      snake   = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid cellSize cellSize
+      snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid cellSize cellSize) (snakeTail game))
+      texto   = Translate pointsX pointsY $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
+  return $ pictures [apple, snake, snkTail, drawGrid, texto]
 
-renderGameOver :: Game -> Picture
-renderGameOver (Game { snakeTail = st }) = pictures [gameOverScreen, gameOverText, score, playAgainText]
-  where
+renderGameOver :: State Game Picture
+renderGameOver = do 
+  game <- get
+  let
     gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral windowWidth) (fromIntegral windowHeight)
     gameOverText   = Translate (-165) 20 $ Scale 0.4 0.4 $ color white $ Text "Game Over!"
-    score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length st))
+    score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length $ snakeTail game))
     playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
+  return $ pictures [gameOverScreen, gameOverText, score, playAgainText]
 
 updateGameIO :: Float -> Game -> IO Game
 updateGameIO _ game = do
@@ -36,7 +39,7 @@ handleKeysIO event game = do
 
 renderIO :: Game -> IO Picture
 renderIO game@(Game {gameOver = gOver}) = do
-  return $ if gOver then renderGameOver game else render game
+  return $ if gOver then evalState renderGameOver game else evalState render game
 
 main :: IO ()
 main = do 
