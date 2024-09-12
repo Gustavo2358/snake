@@ -10,6 +10,7 @@ module Game
   , calculateNewTailPosition
   ) where
 
+import Control.Monad.Reader
 import Control.Monad.State
 import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
@@ -24,6 +25,8 @@ data Game = Game
   , snakeTail :: [(Float, Float)]
   , randomGen :: StdGen
   , gameOver :: Bool
+  , elapsedTime :: Float
+  , idleTime :: Float
   }
   deriving (Show)
 
@@ -47,6 +50,8 @@ initialState (randX, randY) gen =
     , snakeTail = []
     , randomGen = gen
     , gameOver  = False
+    , elapsedTime = 0
+    , idleTime = 0.1
     }
 
 isCollision :: [(Float, Float)] -> (Float, Float) -> Bool
@@ -55,28 +60,35 @@ isCollision (x:xs) p
   | x == p    = True
   | otherwise = isCollision xs p  
 
-updateGame :: State Game ()
-updateGame = do
+updateGame :: Float -> StateT Game (Reader Config) ()
+updateGame delta = do
   game <- get
-  let sh = snakeHead game
-      al = appleLoc game
-      sd = snakeDirection game
-      st = snakeTail game
-      newSnakeHead = calculateSnakeMovement sh sd
-      newSnakeTail = calculateNewTailPosition sh st
-      (newAppleX, gen') = randomR (xAppleMinLimit positionsConfig, xAppleMaxLimit positionsConfig) (randomGen game)
-      (newAppleY, gen'') = randomR (yAppleMinLimit positionsConfig, yAppleMaxLimit positionsConfig) gen'
-      newAppleLoc = (fromIntegral newAppleX + appleInitialX positionsConfig, fromIntegral newAppleY  + appleInitialY positionsConfig)
-  if sh == al
+  config <- lift ask
+  if elapsedTime game < idleTime game
     then do
-      put game { snakeHead = newSnakeHead
-               , snakeTail = if null st then [sh] else head st : newSnakeTail
-               , appleLoc = newAppleLoc
-               , randomGen = gen''
-               }
-    else if isCollision newSnakeTail newSnakeHead
-      then put game { snakeDirection = Stop, gameOver = True }
-      else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail }
+      put game {elapsedTime = elapsedTime game + delta}
+    else do 
+      let sh = snakeHead game
+          al = appleLoc game
+          sd = snakeDirection game
+          st = snakeTail game
+          newSnakeHead = calculateSnakeMovement sh sd
+          newSnakeTail = calculateNewTailPosition sh st
+          (newAppleX, gen') = randomR (xAppleMinLimit config, xAppleMaxLimit config) (randomGen game)
+          (newAppleY, gen'') = randomR (yAppleMinLimit config, yAppleMaxLimit config) gen'
+          newAppleLoc = (fromIntegral newAppleX + appleInitialX config, fromIntegral newAppleY  + appleInitialY config)
+      if sh == al
+        then do
+          put game { snakeHead = newSnakeHead
+                  , snakeTail = if null st then [sh] else head st : newSnakeTail
+                  , appleLoc = newAppleLoc
+                  , randomGen = gen''
+                  , elapsedTime = 0
+                  , idleTime = idleTime game * idleTimeDiminishingFactor config
+                  }
+        else if isCollision newSnakeTail newSnakeHead
+          then put game { snakeDirection = Stop, gameOver = True, elapsedTime = 0 }
+          else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail, elapsedTime = 0 }
 
 calculateSnakeMovement :: (Float, Float) -> Direction -> (Float, Float)
 calculateSnakeMovement (x, y) dir =

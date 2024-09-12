@@ -33,8 +33,8 @@ renderGameOver = do
   return $ pictures [gameOverScreen, gameOverText, score, playAgainText]
 
 updateGameIO :: Float -> Game -> IO Game
-updateGameIO _ game = do
-  return $ execState updateGame game
+updateGameIO delta game = do
+  return $ runReader (execStateT (updateGame delta) game) positionsConfig
 
 handleKeysIO :: Event -> Game -> IO Game
 handleKeysIO event game = do
@@ -50,4 +50,4 @@ main :: IO ()
 main = do 
   gen <- newStdGen
   let (applePos, gen') = createAppleRandomPosition gen
-  playIO window background 12 (initialState applePos gen') renderIO handleKeysIO updateGameIO
+  playIO window background 120 (initialState applePos gen') renderIO handleKeysIO updateGameIO
