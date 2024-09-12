@@ -12,6 +12,7 @@ import Window
 import Grid
 import Positions
 import System.Random (newStdGen, StdGen,  mkStdGen)
+import Control.Monad.Reader (runReader)
 
 main :: IO ()
 main = defaultMain tests
@@ -40,7 +41,9 @@ instance Arbitrary Game where
     snakeDirection <- arbitrary
     snakeTail <- arbitrary
     randomGen <- arbitrary
-    gameOver <- arbitrary
+    let gameOver = False
+        elapsedTime = 0
+        idleTime = 0.1
     return Game { snakeHead = snakeHead
                 , appleLoc = appleLoc
                 , snakeColor = snakeColor
@@ -49,6 +52,8 @@ instance Arbitrary Game where
                 , snakeTail = snakeTail
                 , randomGen = randomGen
                 , gameOver = gameOver
+                , elapsedTime = elapsedTime
+                , idleTime = idleTime
                 }
 
 instance Arbitrary Color where
@@ -56,7 +61,7 @@ instance Arbitrary Color where
 
 prop_initialState :: (Int, Int) -> StdGen -> Bool
 prop_initialState randCoords gen =
-  let game = initialState randCoords gen
+  let game = runReader (initialState randCoords gen) positionsConfig
   in snakeHead game == (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig) &&
      appleLoc game == (appleInitialX positionsConfig + fromIntegral (fst randCoords), appleInitialY positionsConfig + fromIntegral (snd randCoords)) &&
      snakeColor game == green &&
@@ -80,16 +85,18 @@ prop_isCollision positions pos =
 
 prop_updateGame :: Game -> Bool
 prop_updateGame game =
-  let updatedGame = execState updateGame game
-      newHead = calculateSnakeMovement (snakeHead game) (snakeDirection game)
+  let updatedGame = runReader (execStateT (updateGame 0.001) game) positionsConfig
+      newHead = runReader (calculateSnakeMovement (snakeHead game) (snakeDirection game)) positionsConfig
       newTail = calculateNewTailPosition (snakeHead game) (snakeTail game)
-  in if snakeHead game == appleLoc game
-     then snakeHead updatedGame == newHead &&
-          snakeTail updatedGame == if null (snakeTail game) then [snakeHead game] else head (snakeTail game) : newTail
-     else if isCollision newTail newHead
-          then gameOver updatedGame
-          else snakeHead updatedGame == newHead &&
-               snakeTail updatedGame == newTail
+  in if elapsedTime game < idleTime game
+     then elapsedTime updatedGame == elapsedTime game + 0.001
+     else if snakeHead game == appleLoc game
+          then snakeHead updatedGame == newHead &&
+               snakeTail updatedGame == if null (snakeTail game) then [snakeHead game] else head (snakeTail game) : newTail
+          else if isCollision newTail newHead
+               then gameOver updatedGame
+               else snakeHead updatedGame == newHead &&
+                    snakeTail updatedGame == newTail
 
 prop_createAppleRandomPosition :: StdGen -> Bool
 prop_createAppleRandomPosition gen =
