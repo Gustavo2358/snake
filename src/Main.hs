@@ -21,11 +21,12 @@ render = do
       texto   = Translate (pointsX config) (pointsY config) $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
   return $ pictures [apple, snake, snkTail, drawGrid, texto]
 
-renderGameOver :: State Game Picture
+renderGameOver :: StateT Game (Reader Config)  Picture
 renderGameOver = do 
   game <- get
+  config <- lift ask
   let
-    gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral (windowWidth positionsConfig)) (fromIntegral (windowHeight positionsConfig))
+    gameOverScreen = color (dark (dark red)) $ rectangleSolid (fromIntegral (windowWidth config)) (fromIntegral (windowHeight config))
     gameOverText   = Translate (-165) 20 $ Scale 0.4 0.4 $ color white $ Text "Game Over!"
     score          = Translate (-70) (-20) $ Scale 0.2 0.2 $ color white $ Text ("Score: " ++ show (length $ snakeTail game))
     playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
@@ -42,7 +43,7 @@ handleKeysIO event game = do
 renderIO :: Game -> IO Picture
 renderIO game = do
   return $ if gameOver game 
-             then evalState renderGameOver game 
+             then runReader (evalStateT renderGameOver game) positionsConfig
              else runReader (evalStateT render game) positionsConfig
 
 main :: IO ()
