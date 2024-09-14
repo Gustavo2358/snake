@@ -28,6 +28,8 @@ data Config = Config
   , pointsX                   :: Float
   , pointsY                   :: Float
   , idleTimeDiminishingFactor :: Float
+  , xGridOffset               :: Float
+  , yGridOffset               :: Float
   }
 
 positionsConfig :: Config
@@ -52,7 +54,10 @@ positionsConfig = Config
   , appleInitialY             = (-0.5) + yOffset 
   , pointsX                   = -295 + (xOffset * cellSize positionsConfig)
   , pointsY                   = 305 + (yOffset * cellSize positionsConfig)
-  , idleTimeDiminishingFactor = 0.95  }
+  , idleTimeDiminishingFactor = 0.95 
+  , xGridOffset               = xOffset 
+  , yGridOffset               = yOffset 
+  }
 
 {- xOffset e yOffset definem uma forma unificada 
    de mover todos os objetos do jogo de forma

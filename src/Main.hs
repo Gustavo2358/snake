@@ -10,6 +10,7 @@ import Window
 import Grid
 import Positions
 import System.Random (newStdGen)
+import GameMap (loadMap)
 
 render :: StateT Game (Reader Config) Picture
 render = do 
@@ -19,7 +20,8 @@ render = do
       snake   = uncurry gridTranslate (snakeHead game) $ color (snakeColor game) $ rectangleSolid (cellSize config) (cellSize config)
       snkTail = pictures (map (\p -> uncurry gridTranslate p $ color (snakeColor game) $ rectangleSolid (cellSize config) (cellSize config)) (snakeTail game))
       texto   = Translate (pointsX config) (pointsY config) $ Scale 0.2 0.2 $ Color white $ Text ("Points: " ++ show (length $ snakeTail game))
-  return $ pictures [apple, snake, snkTail, drawGrid, texto]
+      obsPics = pictures (map (\p -> uncurry gridTranslate p $ color (greyN 0.5) $ rectangleSolid (cellSize config) (cellSize config)) (obstacles game))
+  return $ pictures [apple, snake, snkTail, drawGrid, texto, obsPics]
 
 renderGameOver :: StateT Game (Reader Config)  Picture
 renderGameOver = do 
@@ -49,12 +51,13 @@ renderIO game = do
 main :: IO ()
 main = do 
   gen <- newStdGen
+  obs <- loadMap "map.txt"
   let (applePos, gen') = runReader (createAppleRandomPosition gen) positionsConfig
   playIO 
     window 
     background 
     120 
-    (runReader (initialState applePos gen') positionsConfig) 
+    (runReader (initialState applePos gen' obs) positionsConfig) 
     renderIO 
     handleKeysIO 
     updateGameIO

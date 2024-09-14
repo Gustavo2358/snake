@@ -3,16 +3,17 @@ import Test.Tasty.HUnit (assertEqual, testCase)
 import Test.Tasty.QuickCheck as QC
 import Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
+import Control.Monad.Reader (runReader)
 import Control.Monad.State
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Game
+import GameMap
 import KeyHandler
 import Window
 import Grid
 import Positions
 import System.Random (newStdGen, StdGen,  mkStdGen)
-import Control.Monad.Reader (runReader)
 
 main :: IO ()
 main = defaultMain tests
@@ -54,14 +55,29 @@ instance Arbitrary Game where
                 , gameOver = gameOver
                 , elapsedTime = elapsedTime
                 , idleTime = idleTime
+                , obstacles = mockedObstacleMaps
                 }
 
 instance Arbitrary Color where
   arbitrary = oneof $ map return [green, red, blue, white, black, makeColor 0 0 0 0]
 
+mockedObstacleMaps :: ObstaclesMap
+mockedObstacleMaps = 
+  [
+   (-9.5,9.0),(-8.5,9.0),(-7.5,9.0),(-6.5,9.0),(-3.5,9.0),(-2.5,9.0),(-1.5,9.0),
+   (-0.5,9.0),(0.5,9.0),(1.5,9.0),(2.5,9.0),(3.5,9.0),(6.5,9.0),(7.5,9.0),(8.5,9.0),(9.5,9.0),
+   (-9.5,8.0),(9.5,8.0),(-9.5,7.0),(-0.5,7.0),(0.5,7.0),(9.5,7.0),(-9.5,4.0),(9.5,4.0),
+   (-9.5,3.0),(9.5,3.0),(-9.5,2.0),(-5.5,2.0),(-4.5,2.0),(9.5,2.0),(-9.5,1.0),(-5.5,1.0),
+   (-4.5,1.0),(9.5,1.0),(-9.5,0.0),(9.5,0.0),(-9.5,-1.0),(9.5,-1.0),(-9.5,-4.0),(9.5,-4.0),
+   (-9.5,-5.0),(9.5,-5.0),(-9.5,-6.0),(-4.5,-6.0),(9.5,-6.0),(-9.5,-7.0),(9.5,-7.0),
+   (-9.5,-8.0),(0.5,-8.0),(9.5,-8.0),(-9.5,-9.0),(9.5,-9.0),(-9.5,-10.0),(-8.5,-10.0),
+   (-7.5,-10.0),(-6.5,-10.0),(-3.5,-10.0),(-2.5,-10.0),(-1.5,-10.0),(-0.5,-10.0),(0.5,-10.0),
+   (1.5,-10.0),(2.5,-10.0),(3.5,-10.0),(6.5,-10.0),(7.5,-10.0),(8.5,-10.0),(9.5,-10.0)
+  ]
+
 prop_initialState :: (Int, Int) -> StdGen -> Bool
 prop_initialState randCoords gen =
-  let game = runReader (initialState randCoords gen) positionsConfig
+  let game = runReader (initialState randCoords gen mockedObstacleMaps) positionsConfig
   in snakeHead game == (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig) &&
      appleLoc game == (appleInitialX positionsConfig + fromIntegral (fst randCoords), appleInitialY positionsConfig + fromIntegral (snd randCoords)) &&
      snakeColor game == green &&
@@ -93,7 +109,7 @@ prop_updateGame game =
      else if snakeHead game == appleLoc game
           then snakeHead updatedGame == newHead &&
                snakeTail updatedGame == if null (snakeTail game) then [snakeHead game] else head (snakeTail game) : newTail
-          else if isCollision newTail newHead
+          else if isCollision newTail newHead || isCollision (obstacles game) newHead
                then gameOver updatedGame
                else snakeHead updatedGame == newHead &&
                     snakeTail updatedGame == newTail

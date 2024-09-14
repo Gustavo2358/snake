@@ -15,6 +15,7 @@ import Control.Monad.State
 import Graphics.Gloss (Color, green, red)
 import System.Random (StdGen, Random (randomR))
 import Positions 
+import GameMap (ObstaclesMap)
 
 data Game = Game
   { snakeHead :: (Float, Float)
@@ -27,6 +28,7 @@ data Game = Game
   , gameOver :: Bool
   , elapsedTime :: Float
   , idleTime :: Float
+  , obstacles :: ObstaclesMap
   }
   deriving (Show)
 
@@ -39,8 +41,8 @@ directionVector GoLeft  = (-1, 0)
 directionVector GoRight = (1, 0)
 directionVector Stop    = (0, 0)
 
-initialState :: (Int, Int) -> StdGen -> Reader Config Game
-initialState (randX, randY) gen = do 
+initialState :: (Int, Int) -> StdGen -> ObstaclesMap -> Reader Config Game
+initialState (randX, randY) gen obs = do 
   config <- ask
   return Game
     { snakeHead  =  (snakeHeadInitialX config, snakeHeadInitialY config)
@@ -53,6 +55,7 @@ initialState (randX, randY) gen = do
     , gameOver  = False
     , elapsedTime = 0
     , idleTime = 0.1
+    , obstacles = obs
     }
 
 isCollision :: [(Float, Float)] -> (Float, Float) -> Bool
@@ -86,7 +89,7 @@ updateGame delta = do
                   , elapsedTime = 0
                   , idleTime = idleTime game * idleTimeDiminishingFactor config
                   }
-        else if isCollision newSnakeTail newSnakeHead
+        else if isCollision newSnakeTail newSnakeHead || isCollision (obstacles game) newSnakeHead
           then put game { snakeDirection = Stop, gameOver = True, elapsedTime = 0 }
           else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail, elapsedTime = 0 }
 
