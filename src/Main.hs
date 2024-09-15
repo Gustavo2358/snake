@@ -52,7 +52,7 @@ main :: IO ()
 main = do 
   gen <- newStdGen
   obs <- loadMap "map.txt"
-  let (applePos, gen') = runReader (createAppleRandomPosition gen) positionsConfig
+  let (applePos, gen') = runReader (createAppleRandomPosition gen obs) positionsConfig
   playIO 
     window 
     background 

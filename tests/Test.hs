@@ -116,13 +116,21 @@ prop_updateGame game =
 
 prop_createAppleRandomPosition :: StdGen -> Property
 prop_createAppleRandomPosition gen = 
-  let ((x, y), _) = runReader (createAppleRandomPosition gen) positionsConfig
-      xValid = x >= fromIntegral (xAppleMinLimit positionsConfig) + appleInitialX positionsConfig 
-        && x <= fromIntegral (xAppleMaxLimit positionsConfig) + appleInitialX positionsConfig
-      yValid = y >= fromIntegral (yAppleMinLimit positionsConfig) + appleInitialY positionsConfig
-        && y <= fromIntegral (yAppleMaxLimit positionsConfig) + appleInitialY positionsConfig
-  in counterexample 
+  let 
+      xMin = fromIntegral (xAppleMinLimit positionsConfig) + appleInitialX positionsConfig
+      xMax = fromIntegral (xAppleMaxLimit positionsConfig) + appleInitialX positionsConfig
+      yMin = fromIntegral (yAppleMinLimit positionsConfig) + appleInitialY positionsConfig
+      yMax = fromIntegral (yAppleMaxLimit positionsConfig) + appleInitialY positionsConfig
+      ((x, y), _) = runReader (createAppleRandomPosition gen mockedObstacleMaps) positionsConfig
+      xValid = x >= xMin && x <= xMax
+      yValid = y >= yMin && y <= yMax
+      positionInObstacles = (x, y) `elem` mockedObstacleMaps
+  in 
+      counterexample 
         ("Generated position: (" ++ show x ++ ", " ++ show y ++ ")" ++
-         "\nX limits: " ++ show (xAppleMinLimit positionsConfig) ++ " to " ++ show (xAppleMaxLimit positionsConfig) ++
-         "\nY limits: " ++ show (yAppleMinLimit positionsConfig) ++ " to " ++ show (yAppleMaxLimit positionsConfig)) 
-        (xValid && yValid)
+         "\nX limits: " ++ show xMin ++ " to " ++ show xMax ++
+         "\nY limits: " ++ show yMin ++ " to " ++ show yMax ++
+         (if positionInObstacles
+          then "\nThe generated position is present in the obstacle map!"
+          else "\nThe generated position is NOT present in the obstacle map.")) 
+        (xValid && yValid && not positionInObstacles)

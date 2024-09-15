@@ -79,7 +79,7 @@ updateGame delta = do
           newSnakeTail = calculateNewTailPosition sh st
       if sh == al
         then do
-          (newAppleLoc, gen) <- lift $ createAppleRandomPosition (randomGen game)
+          (newAppleLoc, gen) <- lift $ createAppleRandomPosition (randomGen game) (obstacles game)
           put game { snakeHead = newSnakeHead
                   , snakeTail = if null st then [sh] else head st : newSnakeTail
                   , appleLoc = newAppleLoc
@@ -108,10 +108,12 @@ calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float
 calculateNewTailPosition _ [] = []
 calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
 
-createAppleRandomPosition :: StdGen -> Reader Config ((Float, Float), StdGen)
-createAppleRandomPosition gen = do 
+createAppleRandomPosition :: StdGen -> ObstaclesMap -> Reader Config ((Float, Float), StdGen)
+createAppleRandomPosition gen obs = do 
   config <- ask
   let (x, gen') = randomR (xAppleMinLimit config,xAppleMaxLimit config) gen
       (y, gen'') = randomR (yAppleMinLimit config,yAppleMaxLimit config) gen'
       newAppleLoc = (fromIntegral x + appleInitialX config, fromIntegral y  + appleInitialY config)
-  return (newAppleLoc, gen'')
+  if newAppleLoc `elem` obs 
+    then createAppleRandomPosition gen'' obs
+    else return (newAppleLoc, gen'')

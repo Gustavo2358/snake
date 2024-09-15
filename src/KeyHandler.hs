@@ -15,6 +15,6 @@ handleKeys (EventKey (SpecialKey KeyLeft) Down _ _)  = do modify $ \game -> game
 handleKeys (EventKey (SpecialKey KeyEnter) Down _ _) = do
   game <- get
   when (gameOver game) $ do
-    let (pos, gen) = runReader (createAppleRandomPosition $ randomGen game) positionsConfig
+    let (pos, gen) = runReader (createAppleRandomPosition  (randomGen game) (obstacles game) ) positionsConfig
     put $ runReader (initialState pos gen (obstacles game)) positionsConfig
 handleKeys _ = return ()

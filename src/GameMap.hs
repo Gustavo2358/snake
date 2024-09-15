@@ -16,7 +16,7 @@ loadMap filePath = do
   return obstaclePositions
 
 parseLine :: (Int, String) -> [(Float, Float)]
-parseLine (y, line) = [ positionFromIndices (y, x) | (x, c) <- zip [0..] line, c == 'x' ]
+parseLine (y, line) = [ positionFromIndices (y, x) | (x, c) <- zip [0..] line, c == 'X' ]
 
 positionFromIndices :: (Int, Int) -> (Float, Float)
 positionFromIndices (y, x) = (fromIntegral x - xMaxLimit positionsConfig, yMaxLimit positionsConfig - fromIntegral y)
