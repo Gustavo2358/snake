@@ -13,11 +13,10 @@ loadMap filePath = do
   content <- readFile filePath
   let linesOfFile = lines content
       obstaclePositions = concatMap parseLine (zip [0..] linesOfFile)
-  print obstaclePositions
   return obstaclePositions
 
 parseLine :: (Int, String) -> [(Float, Float)]
-parseLine (y, line) = [ positionFromIndices (y, x) | (x, c) <- zip [0..] line, c == 'X' ]
+parseLine (y, line) = [ positionFromIndices (y, x) | (x, c) <- zip [0..] line, c == 'x' ]
 
 positionFromIndices :: (Int, Int) -> (Float, Float)
 positionFromIndices (y, x) = (fromIntegral x - xMaxLimit positionsConfig, yMaxLimit positionsConfig - fromIntegral y)

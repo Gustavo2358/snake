@@ -41,12 +41,12 @@ directionVector GoLeft  = (-1, 0)
 directionVector GoRight = (1, 0)
 directionVector Stop    = (0, 0)
 
-initialState :: (Int, Int) -> StdGen -> ObstaclesMap -> Reader Config Game
+initialState :: (Float, Float) -> StdGen -> ObstaclesMap -> Reader Config Game
 initialState (randX, randY) gen obs = do 
   config <- ask
   return Game
     { snakeHead  =  (snakeHeadInitialX config, snakeHeadInitialY config)
-    , appleLoc  = (appleInitialX config + fromIntegral randX, appleInitialY config + fromIntegral randY)
+    , appleLoc  = (randX, randY)
     , snakeColor = green
     , appleColor = red
     , snakeDirection = Stop
@@ -77,15 +77,13 @@ updateGame delta = do
           al = appleLoc game
           st = snakeTail game
           newSnakeTail = calculateNewTailPosition sh st
-          (newAppleX, gen') = randomR (xAppleMinLimit config, xAppleMaxLimit config) (randomGen game)
-          (newAppleY, gen'') = randomR (yAppleMinLimit config, yAppleMaxLimit config) gen'
-          newAppleLoc = (fromIntegral newAppleX + appleInitialX config, fromIntegral newAppleY  + appleInitialY config)
       if sh == al
         then do
+          (newAppleLoc, gen) <- lift $ createAppleRandomPosition (randomGen game)
           put game { snakeHead = newSnakeHead
                   , snakeTail = if null st then [sh] else head st : newSnakeTail
                   , appleLoc = newAppleLoc
-                  , randomGen = gen''
+                  , randomGen = gen
                   , elapsedTime = 0
                   , idleTime = idleTime game * idleTimeDiminishingFactor config
                   }
@@ -110,9 +108,10 @@ calculateNewTailPosition :: (Float, Float) -> [(Float, Float)] -> [(Float, Float
 calculateNewTailPosition _ [] = []
 calculateNewTailPosition oldHead oldTail = oldHead : init oldTail
 
-createAppleRandomPosition :: StdGen -> Reader Config ((Int, Int), StdGen)
+createAppleRandomPosition :: StdGen -> Reader Config ((Float, Float), StdGen)
 createAppleRandomPosition gen = do 
   config <- ask
   let (x, gen') = randomR (xAppleMinLimit config,xAppleMaxLimit config) gen
-      (y, gen'') = randomR (yAppleMaxLimit config,yAppleMaxLimit config) gen'
-  return ((x, y), gen'')
+      (y, gen'') = randomR (yAppleMinLimit config,yAppleMaxLimit config) gen'
+      newAppleLoc = (fromIntegral x + appleInitialX config, fromIntegral y  + appleInitialY config)
+  return (newAppleLoc, gen'')

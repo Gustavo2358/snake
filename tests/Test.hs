@@ -75,11 +75,11 @@ mockedObstacleMaps =
    (1.5,-10.0),(2.5,-10.0),(3.5,-10.0),(6.5,-10.0),(7.5,-10.0),(8.5,-10.0),(9.5,-10.0)
   ]
 
-prop_initialState :: (Int, Int) -> StdGen -> Bool
+prop_initialState :: (Float, Float) -> StdGen -> Bool
 prop_initialState randCoords gen =
   let game = runReader (initialState randCoords gen mockedObstacleMaps) positionsConfig
   in snakeHead game == (snakeHeadInitialX positionsConfig, snakeHeadInitialY positionsConfig) &&
-     appleLoc game == (appleInitialX positionsConfig + fromIntegral (fst randCoords), appleInitialY positionsConfig + fromIntegral (snd randCoords)) &&
+     appleLoc game == (fst randCoords, snd randCoords) &&
      snakeColor game == green &&
      appleColor game == red &&
      snakeDirection game == Stop &&
@@ -114,8 +114,15 @@ prop_updateGame game =
                else snakeHead updatedGame == newHead &&
                     snakeTail updatedGame == newTail
 
-prop_createAppleRandomPosition :: StdGen -> Bool
-prop_createAppleRandomPosition gen =
+prop_createAppleRandomPosition :: StdGen -> Property
+prop_createAppleRandomPosition gen = 
   let ((x, y), _) = runReader (createAppleRandomPosition gen) positionsConfig
-  in x >= xAppleMinLimit positionsConfig && x <= xAppleMaxLimit positionsConfig &&
-     y >= yAppleMinLimit positionsConfig && y <= yAppleMaxLimit positionsConfig
+      xValid = x >= fromIntegral (xAppleMinLimit positionsConfig) + appleInitialX positionsConfig 
+        && x <= fromIntegral (xAppleMaxLimit positionsConfig) + appleInitialX positionsConfig
+      yValid = y >= fromIntegral (yAppleMinLimit positionsConfig) + appleInitialY positionsConfig
+        && y <= fromIntegral (yAppleMaxLimit positionsConfig) + appleInitialY positionsConfig
+  in counterexample 
+        ("Generated position: (" ++ show x ++ ", " ++ show y ++ ")" ++
+         "\nX limits: " ++ show (xAppleMinLimit positionsConfig) ++ " to " ++ show (xAppleMaxLimit positionsConfig) ++
+         "\nY limits: " ++ show (yAppleMinLimit positionsConfig) ++ " to " ++ show (yAppleMaxLimit positionsConfig)) 
+        (xValid && yValid)
