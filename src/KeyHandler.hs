@@ -1,6 +1,6 @@
 module KeyHandler(handleKeys) where
 
-import Control.Monad  
+import Control.Monad
 import Control.Monad.State
 import Graphics.Gloss.Interface.Pure.Game (Event(EventKey), SpecialKey (KeyUp, KeyRight, KeyDown, KeyLeft, KeyEnter), Key (SpecialKey), KeyState (Down))
 import Game
@@ -8,13 +8,34 @@ import Positions (positionsConfig)
 import Control.Monad.Reader (runReader)
 
 handleKeys :: Event -> State Game ()
-handleKeys (EventKey (SpecialKey KeyUp) Down _ _)    = do modify $ \game -> game {snakeDirection = GoUp}
-handleKeys (EventKey (SpecialKey KeyRight) Down _ _) = do modify $ \game -> game {snakeDirection = GoRight}
-handleKeys (EventKey (SpecialKey KeyDown) Down _ _)  = do modify $ \game -> game {snakeDirection = GoDown}
-handleKeys (EventKey (SpecialKey KeyLeft) Down _ _)  = do modify $ \game -> game {snakeDirection = GoLeft}
-handleKeys (EventKey (SpecialKey KeyEnter) Down _ _) = do
+handleKeys (EventKey (SpecialKey key) Down _ _) =
+  case key of
+    KeyUp    -> changeDirection GoUp
+    KeyRight -> changeDirection GoRight
+    KeyDown  -> changeDirection GoDown
+    KeyLeft  -> changeDirection GoLeft
+    KeyEnter -> restartGameIfOver
+    _        -> return ()
+handleKeys _ = return ()
+
+changeDirection :: Direction -> State Game ()
+changeDirection newDir = do
+  game <- get
+  let currentDir = snakeDirection game
+  unless (isOpposite newDir currentDir) $ do put game { snakeDirection = newDir }
+
+
+isOpposite :: Direction -> Direction -> Bool
+isOpposite GoUp GoDown   = True
+isOpposite GoDown GoUp   = True
+isOpposite GoLeft GoRight = True
+isOpposite GoRight GoLeft = True
+isOpposite _ _           = False
+
+restartGameIfOver :: State Game ()
+restartGameIfOver = do
   game <- get
   when (gameOver game) $ do
-    let (pos, gen) = runReader (createAppleRandomPosition  (randomGen game) (obstacles game) ) positionsConfig
-    put $ runReader (initialState pos gen (obstacles game)) positionsConfig
-handleKeys _ = return ()
+    let (pos, gen) = runReader (createAppleRandomPosition (randomGen game) (obstacles game)) positionsConfig
+        newState = runReader (initialState pos gen (obstacles game)) positionsConfig
+    put newState

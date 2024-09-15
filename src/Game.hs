@@ -54,7 +54,7 @@ initialState (randX, randY) gen obs = do
     , randomGen = gen
     , gameOver  = False
     , elapsedTime = 0
-    , idleTime = 0.1
+    , idleTime = 0.15
     , obstacles = obs
     }
 
