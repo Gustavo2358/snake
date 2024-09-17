@@ -43,12 +43,16 @@ renderGameOver = do
 
 renderSuccess :: StateT Game (Reader Config) Picture
 renderSuccess = do
+  game <- get
   config <- lift ask
+  let scoreText = "Score: " ++ show (length (snakeTail game))
   return $ pictures
     [ color (dark green) $ rectangleSolid (fromIntegral (windowWidth config)) (fromIntegral (windowHeight config))
-    , Translate (-150) 20 $ Scale 0.4 0.4 $ Color white $ Text "You Win!"
-    , Translate (-180) (-90) $ Scale 0.2 0.2 $ Color white $ Text "Press Enter to play again"
+    , Translate (-150) 20 $ Scale 0.4 0.4 $ Color black $ Text "You Win!"
+    , Translate (-180) (-90) $ Scale 0.2 0.2 $ Color black $ Text "Press Enter to play again"
+    , Translate (-100) (-150) $ Scale 0.3 0.3 $ Color black $ Text scoreText
     ]
+
 
 
 updateGameIO :: Float -> Game -> IO Game
