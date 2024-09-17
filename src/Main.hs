@@ -23,6 +23,13 @@ render = do
       obsPics = pictures (map (\p -> uncurry gridTranslate p $ color (greyN 0.5) $ rectangleSolid (cellSize config) (cellSize config)) (obstacles game))
   return $ pictures [apple, snake, snkTail, drawGrid, texto, obsPics]
 
+renderEnterScore :: StateT Game (Reader Config) Picture
+renderEnterScore = do
+  game <- get
+  let promptText = Translate (-200) 100 $ Scale 0.3 0.3 $ Color white $ Text "Enter Score Limit:"
+      inputText = Translate (-100) (-50) $ Scale 0.5 0.5 $ Color white $ Text (scoreInput game)
+  return $ pictures [promptText, inputText]
+
 renderGameOver :: StateT Game (Reader Config)  Picture
 renderGameOver = do 
   game <- get
@@ -34,6 +41,16 @@ renderGameOver = do
     playAgainText  = Translate (-180) (-90) $ Scale 0.2 0.2 $ color white $ Text "Press Enter to play again"
   return $ pictures [gameOverScreen, gameOverText, score, playAgainText]
 
+renderSuccess :: StateT Game (Reader Config) Picture
+renderSuccess = do
+  config <- lift ask
+  return $ pictures
+    [ color (dark green) $ rectangleSolid (fromIntegral (windowWidth config)) (fromIntegral (windowHeight config))
+    , Translate (-150) 20 $ Scale 0.4 0.4 $ Color white $ Text "You Win!"
+    , Translate (-180) (-90) $ Scale 0.2 0.2 $ Color white $ Text "Press Enter to play again"
+    ]
+
+
 updateGameIO :: Float -> Game -> IO Game
 updateGameIO delta game = do
   return $ runReader (execStateT (updateGame delta) game) positionsConfig
@@ -43,21 +60,25 @@ handleKeysIO event game = do
   return ( execState (handleKeys event) game)
 
 renderIO :: Game -> IO Picture
-renderIO game = do
-  return $ if gameOver game 
-             then runReader (evalStateT renderGameOver game) positionsConfig
-             else runReader (evalStateT render game) positionsConfig
+renderIO game
+  | gameState game == EnterScore = return $ runReader (evalStateT renderEnterScore game) positionsConfig
+  | gameWon game = return $ runReader (evalStateT renderSuccess game) positionsConfig
+  | gameOver game = return $ runReader (evalStateT renderGameOver game) positionsConfig
+  | otherwise = return $ runReader (evalStateT render game) positionsConfig
+
+
 
 main :: IO ()
 main = do 
   gen <- newStdGen
   obs <- loadMap "map.txt"
   let (applePos, gen') = runReader (createAppleRandomPosition gen obs) positionsConfig
+      initialGame = runReader (initialState applePos gen' obs) positionsConfig
   playIO 
     window 
     background 
     120 
-    (runReader (initialState applePos gen' obs) positionsConfig) 
+    initialGame 
     renderIO 
     handleKeysIO 
     updateGameIO

@@ -8,6 +8,7 @@ module Game
   , createAppleRandomPosition
   , calculateSnakeMovement
   , calculateNewTailPosition
+  , GameState(..)
   ) where
 
 import Control.Monad.Reader
@@ -26,11 +27,18 @@ data Game = Game
   , snakeTail :: [(Float, Float)]
   , randomGen :: StdGen
   , gameOver :: Bool
+  , gameWon :: Bool
   , elapsedTime :: Float
   , idleTime :: Float
   , obstacles :: ObstaclesMap
+  , scoreLimit :: Int
+  , gameState :: GameState
+  , scoreInput :: String 
   }
   deriving (Show)
+
+
+data GameState = Playing | GameOver | Victory | EnterScore deriving (Eq, Show)
 
 data Direction = GoUp | GoDown | GoLeft | GoRight | Stop deriving (Eq, Show)
 
@@ -42,20 +50,24 @@ directionVector GoRight = (1, 0)
 directionVector Stop    = (0, 0)
 
 initialState :: (Float, Float) -> StdGen -> ObstaclesMap -> Reader Config Game
-initialState (randX, randY) gen obs = do 
+initialState (randX, randY) gen obs = do
   config <- ask
   return Game
-    { snakeHead  =  (snakeHeadInitialX config, snakeHeadInitialY config)
-    , appleLoc  = (randX, randY)
+    { snakeHead = (snakeHeadInitialX config, snakeHeadInitialY config)
+    , appleLoc = (randX, randY)
     , snakeColor = green
     , appleColor = red
     , snakeDirection = Stop
     , snakeTail = []
     , randomGen = gen
-    , gameOver  = False
+    , gameOver = False
+    , gameWon = False
     , elapsedTime = 0
     , idleTime = 0.15
     , obstacles = obs
+    , scoreLimit = 0
+    , gameState = EnterScore
+    , scoreInput = ""
     }
 
 isCollision :: [(Float, Float)] -> (Float, Float) -> Bool
@@ -69,27 +81,29 @@ updateGame delta = do
   game <- get
   config <- lift ask
   if elapsedTime game < idleTime game
-    then do
-      put game {elapsedTime = elapsedTime game + delta}
+    then put game {elapsedTime = elapsedTime game + delta}
     else do
       newSnakeHead <- lift $ calculateSnakeMovement (snakeHead game) (snakeDirection game)
       let sh = snakeHead game
           al = appleLoc game
           st = snakeTail game
           newSnakeTail = calculateNewTailPosition sh st
-      if sh == al
+      if length newSnakeTail >= scoreLimit game
+        then do
+          put game { gameWon = True, elapsedTime = 0 }
+      else if newSnakeHead == al
         then do
           (newAppleLoc, gen) <- lift $ createAppleRandomPosition (randomGen game) (obstacles game)
           put game { snakeHead = newSnakeHead
-                  , snakeTail = if null st then [sh] else head st : newSnakeTail
-                  , appleLoc = newAppleLoc
-                  , randomGen = gen
-                  , elapsedTime = 0
-                  , idleTime = idleTime game * idleTimeDiminishingFactor config
-                  }
-        else if isCollision newSnakeTail newSnakeHead || isCollision (obstacles game) newSnakeHead
-          then put game { snakeDirection = Stop, gameOver = True, elapsedTime = 0 }
-          else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail, elapsedTime = 0 }
+                   , snakeTail = if null st then [sh] else head st : newSnakeTail
+                   , appleLoc = newAppleLoc
+                   , randomGen = gen
+                   , elapsedTime = 0
+                   , idleTime = idleTime game * idleTimeDiminishingFactor config
+                   }
+      else if isCollision newSnakeTail newSnakeHead || isCollision (obstacles game) newSnakeHead
+        then put game { snakeDirection = Stop, gameOver = True, elapsedTime = 0 }
+            else put game { snakeHead = newSnakeHead, snakeTail = newSnakeTail, elapsedTime = 0 }
 
 calculateSnakeMovement :: (Float, Float) -> Direction -> Reader Config (Float, Float)
 calculateSnakeMovement (x, y) dir = do
