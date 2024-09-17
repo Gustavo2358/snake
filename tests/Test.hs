@@ -33,6 +33,9 @@ instance Arbitrary StdGen where
 instance Arbitrary Direction where
   arbitrary = oneof $ map return [GoUp, GoDown, GoLeft, GoRight, Stop]
 
+instance Arbitrary GameState where 
+  arbitrary = oneof $ map return [Playing, GameOver, Victory, EnterScore]
+
 instance Arbitrary Game where
   arbitrary = do
     snakeHead <- arbitrary
@@ -42,6 +45,10 @@ instance Arbitrary Game where
     snakeDirection <- arbitrary
     snakeTail <- arbitrary
     randomGen <- arbitrary
+    gameWon <- arbitrary
+    scoreLimit <- arbitrary
+    gameState <- arbitrary
+    scoreInput <- arbitrary
     let gameOver = False
         elapsedTime = 0
         idleTime = 0.1
@@ -56,6 +63,10 @@ instance Arbitrary Game where
                 , elapsedTime = elapsedTime
                 , idleTime = idleTime
                 , obstacles = mockedObstacleMaps
+                , gameWon = gameWon
+                , scoreLimit = scoreLimit
+                , gameState = gameState
+                , scoreInput = scoreInput
                 }
 
 instance Arbitrary Color where
